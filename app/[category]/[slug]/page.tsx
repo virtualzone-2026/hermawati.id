@@ -10,6 +10,7 @@ function urlFor(source: any) {
   return builder.image(source);
 }
 
+// Komponen renderer untuk isi artikel dengan dukungan Font Arab Otomatis
 const ptComponents = {
   types: {
     image: ({ value }: any) => {
@@ -31,15 +32,44 @@ const ptComponents = {
     },
   },
   block: {
-    normal: ({ children }: any) => (
-      <p style={{ marginBottom: '1.8rem', lineHeight: '1.8', fontSize: '18px', color: '#333' }}>
-        {children}
-      </p>
-    ),
+    normal: ({ children }: any) => {
+      // LOGIKA DETEKSI ARAB: Mengecek apakah teks mengandung karakter Hijaiyah
+      const isArabic = /[\u0600-\u06FF]/.test(children[0]);
+
+      return (
+        <p style={{ 
+          marginBottom: isArabic ? '2.2rem' : '1.8rem', 
+          lineHeight: isArabic ? '2.5' : '1.8', 
+          fontSize: isArabic ? '28px' : '18px', 
+          color: '#333',
+          fontFamily: isArabic ? 'var(--font-amiri), serif' : 'inherit',
+          direction: isArabic ? 'rtl' : 'ltr',
+          textAlign: isArabic ? 'right' : 'left'
+        }}>
+          {children}
+        </p>
+      );
+    },
     h2: ({ children }: any) => (
       <h2 style={{ marginTop: '2.5rem', marginBottom: '1.2rem', color: '#004a8e', fontSize: '24px', fontWeight: 'bold' }}>
         {children}
       </h2>
+    ),
+    blockquote: ({ children }: any) => (
+      <blockquote style={{ 
+        borderRight: '5px solid #004a8e', 
+        padding: '25px', 
+        backgroundColor: '#f8f9fa', 
+        margin: '40px 0',
+        fontFamily: 'var(--font-amiri), serif',
+        fontSize: '30px',
+        lineHeight: '2.8',
+        direction: 'rtl',
+        textAlign: 'center',
+        borderRadius: '8px'
+      }}>
+        {children}
+      </blockquote>
     ),
   },
 };
@@ -125,7 +155,7 @@ export default async function PostDetail({
         {post.body && <PortableText value={post.body} components={ptComponents} />}
       </div>
 
-      {/* FITUR BARU: ATTACHMENT VIEWER & DOWNLOAD */}
+      {/* FITUR ATTACHMENT VIEWER & DOWNLOAD */}
       {fileUrl && (
         <div style={{ margin: '50px 0', border: '1px solid #ddd', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <div style={{ padding: '15px 20px', backgroundColor: '#f8f9fa', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
