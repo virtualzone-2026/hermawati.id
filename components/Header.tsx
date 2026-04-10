@@ -3,11 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function Header() {
+  // Update daftar menu sesuai revisi kategori terbaru
   const menus = [
     { name: "Berita", slug: "berita" },
     { name: "Artikel", slug: "artikel" },
-    { name: "Tafsir Al-Qur'an", slug: "tafsir" },
-    { name: "Hadits Pilihan", slug: "hadits" },
+    { name: "Qur'an Hadits", slug: "quran-hadits" }, // Pengganti Tafsir
+    { name: "Adab & Fawaid", slug: "adab-fawaid" }, // Pengganti Hadits Pilihan
     { name: "Fiqih Praktis", slug: "fiqih" },
     { name: "Mutiara Hikmah", slug: "hikmah" },
     { name: "Khutbah", slug: "khutbah" },
@@ -16,20 +17,20 @@ export default function Header() {
 
   return (
     <header className="header-container">
-      {/* LAPIS 1: TOPBAR MODERN - POSISI SUDAH DITUKAR */}
+      {/* LAPIS 1: TOPBAR MODERN */}
       <div className="top-bar">
         <div className="container flex-row-center">
           
-          {/* SEKARANG DI KIRI: MENU */}
+          {/* SISI KIRI: MENU */}
           <div className="top-left-menu">
             <div className="menu-circle-icon">☰</div>
             <span className="menu-label">MENU</span>
           </div>
 
-          {/* SEKARANG DI TENGAH: SEARCH PILL */}
+          {/* SISI TENGAH: SEARCH PILL */}
           <div className="top-center-search">
             <div className="search-pill-container">
-              <input type="text" placeholder="Cari berita..." className="search-pill-input" />
+              <input type="text" placeholder="Cari materi..." className="search-pill-input" />
               <button className="search-pill-button">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
@@ -39,7 +40,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* SEKARANG DI KANAN: DAFTAR MPC & MASUK */}
+          {/* SISI KANAN: DAFTAR MPC & MASUK */}
           <div className="top-right-group">
             <button className="btn-blue-pill">Daftar MPC</button>
             <Link href="https://abahsaif.sanity.studio" target="_blank" className="btn-outline-pill">
@@ -50,7 +51,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* LAPIS 2: LOGO SECTION (TETAP RATA KIRI) */}
+      {/* LAPIS 2: LOGO SECTION */}
       <div className="logo-section">
         <div className="container">
           <Link href="/" className="logo-flex-wrapper">
