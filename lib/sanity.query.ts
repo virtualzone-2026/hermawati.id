@@ -2,11 +2,11 @@
 import { client } from "./sanity.client";
 import { groq } from "next-sanity";
 
-// Konfigurasi revalidate agar data selalu fresh di web (Production)
+// Konfigurasi revalidate agar data selalu fresh (PENTING untuk web live)
 const revalidateConfig = { next: { revalidate: 0 } };
 
 /**
- * 1. Ambil SEMUA postingan terbaru (Berita, Artikel, Khutbah, dll)
+ * 1. Ambil SEMUA postingan terbaru (Homepage)
  */
 export async function getAllPosts() {
   return client.fetch(
@@ -16,7 +16,8 @@ export async function getAllPosts() {
       "slug": slug.current,
       "image": mainImage.asset->url,
       publishedAt,
-      "category": coalesce(categories[0]->title, category, "Umum")
+      category,
+      subCategory
     }`,
     {},
     revalidateConfig
@@ -24,11 +25,11 @@ export async function getAllPosts() {
 }
 
 /**
- * 2. Ambil Berita Terbaru (Headline).
+ * 2. Ambil Berita Terbaru (Headline)
  */
 export async function getNewsPosts() {
   return client.fetch(
-    groq`*[_type == "post" && (categories[]->title match "Berita" || category match "berita")] | order(publishedAt desc)[0...6] {
+    groq`*[_type == "post" && category == "berita"] | order(publishedAt desc)[0...6] {
       _id,
       title,
       "slug": slug.current,
@@ -42,35 +43,18 @@ export async function getNewsPosts() {
 }
 
 /**
- * 3. Ambil Artikel Terbaru untuk Sidebar.
- */
-export async function getArticlePosts() {
-  return client.fetch(
-    groq`*[_type == "post" && (categories[]->title match "Artikel" || category match "artikel")] | order(publishedAt desc)[0...5] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      "category": "Artikel"
-    }`,
-    {},
-    revalidateConfig
-  );
-}
-
-/**
- * 4. Fungsi DINAMIS untuk Halaman Rubrik (Tafsir, Fiqih, dll).
+ * 3. Fungsi Dinamis Rubrik (Mendukung filter Kategori Induk atau Sub-Kategori)
  */
 export async function getPostsByCategory(categoryName: string) {
   return client.fetch(
-    groq`*[_type == "post" && (categories[]->title match $categoryName || category match $categoryName)] | order(publishedAt desc) {
+    groq`*[_type == "post" && (category == $categoryName || subCategory == $categoryName)] | order(publishedAt desc) {
       _id,
       title,
       "slug": slug.current,
       "image": mainImage.asset->url,
       publishedAt,
-      "category": coalesce(categories[0]->title, category, $categoryName),
+      category,
+      subCategory,
       "excerpt": array::join(string::split(pt::text(body), "")[0...150], "") + "..."
     }`,
     { categoryName },
@@ -79,7 +63,7 @@ export async function getPostsByCategory(categoryName: string) {
 }
 
 /**
- * 5. Ambil Detail Konten (Untuk halaman baca).
+ * 4. Ambil Detail Konten (LENGKAP dengan PDF/PPT & Author)
  */
 export async function getSinglePost(slug: string) {
   if (!slug) return null;
@@ -90,9 +74,12 @@ export async function getSinglePost(slug: string) {
       "slug": slug.current,
       "image": mainImage.asset->url,
       publishedAt,
-      "category": coalesce(categories[0]->title, category, "Artikel"),
+      category,
+      subCategory,
       body,
-      "author": author->name
+      author,
+      "attachmentUrl": attachment.asset->url,
+      "attachmentDescription": attachment.description
     }`,
     { slug },
     revalidateConfig
@@ -100,11 +87,11 @@ export async function getSinglePost(slug: string) {
 }
 
 /**
- * 6. Ambil Khutbah Terbaru (Sidebar Khutbah).
+ * 5. Ambil Khutbah Terbaru (Sidebar)
  */
 export async function getKhutbahPosts() {
   return client.fetch(
-    groq`*[_type == "post" && (categories[]->title match "Khutbah" || category match "khutbah")] | order(publishedAt desc)[0...5] {
+    groq`*[_type == "post" && category == "khutbah"] | order(publishedAt desc)[0...5] {
       _id,
       title,
       "slug": slug.current,
@@ -118,11 +105,11 @@ export async function getKhutbahPosts() {
 }
 
 /**
- * 7. Ambil Postingan Terkait (Bawah Artikel).
+ * 6. Ambil Postingan Terkait (Bawah Artikel)
  */
 export async function getRelatedPosts(category: string, currentSlug: string) {
   return client.fetch(
-    groq`*[_type == "post" && (categories[]->title match $category || category match $category) && slug.current != $currentSlug][0...3] {
+    groq`*[_type == "post" && category == $category && slug.current != $currentSlug][0...3] {
       _id,
       title,
       "slug": slug.current,

@@ -8,71 +8,87 @@ import LatestPosts from "@/components/LatestPosts";
 import KhutbahSidebar from "@/components/KhutbahSidebar";
 import InfoDakwah from "@/components/InfoDakwah";
 
-// PENTING: Memastikan data selalu segar dari Sanity saat halaman dibuka
+// Menjamin data dari Project ID: deyoeizv selalu segar
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; 
 
 export default async function Home() {
-  // Mengambil data Khutbah di Server Component agar cepat (SSR)
+  // Mengambil data Khutbah dari Sanity
   const khutbahData = await getKhutbahPosts() || [];
 
   return (
-    <div className="container" style={{ margin: '0 auto', maxWidth: '1200px', padding: '0 20px', fontFamily: 'Arial, sans-serif' }}>
+    <div className="container" style={{ margin: '0 auto', maxWidth: '1200px', padding: '0 20px' }}>
       
-      {/* Bagian Berita Berjalan / Breaking News */}
-      <TopNews />
+      {/* 1. TOP NEWS (HIDDEN ON MOBILE) */}
+      <div className="hide-on-mobile">
+        <TopNews />
+      </div>
 
-      {/* BARIS ATAS: Headline & Popular Posts */}
-      <div className="top-layout-grid" style={{ 
+      {/* 2. LAPIS UTAMA: HEADLINE & POPULAR */}
+      <div className="main-grid" style={{ 
         display: 'grid', 
         gridTemplateColumns: '1fr 340px', 
-        gap: '30px', 
-        marginTop: '20px' 
+        gap: '40px', 
+        marginTop: '25px' 
       }}>
         <main>
+          {/* Headline Tetap Tampil di HP sebagai berita utama */}
           <Headline />
         </main>
-        <aside>
+        
+        {/* POPULAR SIDEBAR (HIDDEN ON MOBILE) */}
+        <aside className="hide-on-mobile">
           <PopularSidebar />
         </aside>
       </div>
 
-      {/* REKOMENDASI: Grid Acak (Client-Side Shuffling) */}
-      {/* Komponen ini menangani grid-nya sendiri di dalam */}
-      <RecommendationSection />
+      {/* 3. REKOMENDASI ACAK (HIDDEN ON MOBILE) */}
+      <div className="hide-on-mobile">
+        <RecommendationSection />
+      </div>
 
-      {/* BARIS BAWAH: Latest Posts & Sidebar Gabungan */}
+      {/* 4. LAYOUT BAWAH: KHUTBAH & INFO DAKWAH */}
       <div className="bottom-layout-grid" style={{ 
         display: 'grid', 
         gridTemplateColumns: '1fr 340px', 
-        gap: '30px', 
-        marginTop: '40px' 
+        gap: '40px', 
+        marginTop: '50px',
+        paddingBottom: '60px'
       }}>
-        
-        {/* KOLOM KIRI: Daftar Postingan Terbaru */}
-        <section>
+        {/* LATEST POSTS FEED (HIDDEN ON MOBILE) */}
+        <section className="hide-on-mobile">
+          <h2 style={{ fontSize: '22px', color: 'var(--abah-blue)', fontWeight: '900', marginBottom: '25px', textTransform: 'uppercase' }}>
+            Postingan <span style={{ color: 'var(--abah-gold)' }}>Terbaru</span>
+          </h2>
           <LatestPosts />
         </section>
 
-        {/* KOLOM KANAN: Sidebar Khutbah & Info Dakwah */}
+        {/* SIDEBAR DAKWAH (ALWAYS VISIBLE) */}
+        {/* Di HP, bagian ini akan muncul tepat di bawah Headline */}
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          {/* Box Khutbah Terbaru */}
           <KhutbahSidebar articles={khutbahData} />
-          
-          {/* Box Info Dakwah / Poster Event */}
           <InfoDakwah />
         </aside>
       </div>
 
-      {/* Optimasi Responsif Mobile */}
+      {/* CSS UNTUK FILTER TAMPILAN MOBILE */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 992px) {
-          .top-layout-grid, .bottom-layout-grid {
+          /* SEMBUNYIKAN BAGIAN YANG TIDAK DIINGINKAN */
+          .hide-on-mobile {
+            display: none !important;
+          }
+
+          /* Atur ulang grid menjadi satu kolom */
+          .main-grid, .bottom-layout-grid {
             grid-template-columns: 1fr !important;
+            gap: 30px !important;
+            margin-top: 15px !important;
           }
-          aside {
-            margin-top: 20px;
-          }
+
+          /* Pastikan urutan muncul: Headline baru Khutbah */
+          main { order: 1; }
+          .bottom-layout-grid aside { order: 2; }
         }
       `}} />
     </div>
