@@ -2,15 +2,15 @@
 import { client } from "./sanity.client";
 import { groq } from "next-sanity";
 
-// Konfigurasi revalidate agar data selalu fresh (PENTING untuk web live)
+// Konfigurasi revalidate agar data selalu fresh di web (Production)
 const revalidateConfig = { next: { revalidate: 0 } };
 
 /**
- * 1. Ambil SEMUA postingan terbaru (Homepage)
+ * 1. Ambil SEMUA postingan terbaru (Homepage & Rekomendasi)
  */
 export async function getAllPosts() {
   return client.fetch(
-    groq`*[_type == "post"] | order(publishedAt desc)[0...10] {
+    groq`*[_type == "post"] | order(publishedAt desc)[0...15] {
       _id,
       title,
       "slug": slug.current,
@@ -43,7 +43,26 @@ export async function getNewsPosts() {
 }
 
 /**
- * 3. Fungsi Dinamis Rubrik (Mendukung filter Kategori Induk atau Sub-Kategori)
+ * 3. Ambil Artikel Terbaru (Sidebar Artikel) 
+ * PENTING: Fungsi ini yang dicari oleh LatestArticlesSidebar.tsx
+ */
+export async function getArticlePosts() {
+  return client.fetch(
+    groq`*[_type == "post" && category == "artikel"] | order(publishedAt desc)[0...5] {
+      _id,
+      title,
+      "slug": slug.current,
+      "image": mainImage.asset->url,
+      publishedAt,
+      "category": "Artikel"
+    }`,
+    {},
+    revalidateConfig
+  );
+}
+
+/**
+ * 4. Fungsi Dinamis Rubrik (Mendukung filter Kategori Induk atau Sub-Kategori)
  */
 export async function getPostsByCategory(categoryName: string) {
   return client.fetch(
@@ -63,7 +82,7 @@ export async function getPostsByCategory(categoryName: string) {
 }
 
 /**
- * 4. Ambil Detail Konten (LENGKAP dengan PDF/PPT & Author)
+ * 5. Ambil Detail Konten (LENGKAP dengan PDF/PPT & Author)
  */
 export async function getSinglePost(slug: string) {
   if (!slug) return null;
@@ -87,7 +106,7 @@ export async function getSinglePost(slug: string) {
 }
 
 /**
- * 5. Ambil Khutbah Terbaru (Sidebar)
+ * 6. Ambil Khutbah Terbaru (Sidebar Khutbah)
  */
 export async function getKhutbahPosts() {
   return client.fetch(
@@ -105,7 +124,7 @@ export async function getKhutbahPosts() {
 }
 
 /**
- * 6. Ambil Postingan Terkait (Bawah Artikel)
+ * 7. Ambil Postingan Terkait (Bawah Artikel)
  */
 export async function getRelatedPosts(category: string, currentSlug: string) {
   return client.fetch(
