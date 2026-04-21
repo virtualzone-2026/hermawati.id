@@ -1,157 +1,103 @@
-// components/PopularSidebar.tsx
-import { getNewsPosts } from "@/lib/sanity.query";
+import { getNewsPosts, getAllPosts } from "@/lib/sanity.query";
 import Link from "next/link";
 
-// 🔥 helper URL biar konsisten
+// 🔥 helper URL Konsisten
 function getPostUrl(post: any) {
   const category = post.categorySlug || "berita";
-  return `/category/${category}/${post.slug}`;
+  const slug = post.slug?.current || post.slug || "";
+  return `/category/${category}/${slug}`;
 }
 
 export default async function PopularSidebar() {
-  const popularData = await getNewsPosts();
+  // 1. Coba ambil data berita populer
+  let popularData = await getNewsPosts();
+
+  // 2. SAFETY GUARD: Jika getNewsPosts kosong, ambil dari allPosts biar nggak bolong
+  if (!popularData || popularData.length === 0) {
+    const backupData = await getAllPosts();
+    popularData = backupData?.slice(0, 5) || [];
+  }
 
   return (
-    <section
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#fff",
-      }}
-    >
-      <h2
-        style={{
-          fontSize: "18px",
-          color: "#5D427C",
-          fontWeight: "900",
-          marginBottom: "20px",
-          paddingLeft: "12px",
-          borderLeft: "4px solid #B294D1",
-          textTransform: "uppercase",
-          letterSpacing: "1px",
-        }}
-      >
-        Tulisan Terpopuler
-      </h2>
+    <section style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      {/* HEADER: Deep Purple & Lavender */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "25px" }}>
+        <div style={{ width: "5px", height: "24px", background: "#B294D1", borderRadius: "10px" }}></div>
+        <h2 style={{ fontSize: "19px", color: "#5D427C", fontWeight: "900", margin: 0, letterSpacing: "1px" }}>
+          TER<span style={{ color: "#B294D1" }}>POPULER</span>
+        </h2>
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {popularData && popularData.length > 0 ? (
-          popularData.slice(0, 5).map((news: any, index: number) => (
-            <Link
-              href={getPostUrl(news)} // ✅ FIX DI SINI
-              key={news._id}
-              style={{
-                display: "flex",
-                gap: "12px",
-                textDecoration: "none",
-                padding: "14px 10px",
-                borderBottom: "1px solid #f8f6fa",
-                transition: "all 0.2s",
-              }}
-            >
-              {/* Rank */}
-              <span
-                style={{
-                  fontSize: "24px",
-                  fontWeight: "900",
-                  color: index < 3 ? "#B294D1" : "#e2d7eb",
-                  minWidth: "35px",
-                  fontStyle: "italic",
-                  lineHeight: "1",
-                }}
-              >
-                {index + 1}
-              </span>
+        {popularData.length > 0 ? (
+          popularData.slice(0, 5).map((news: any, index: number) => {
+            const isEven = (index + 1) % 2 === 0;
+            const rankColor = isEven ? "#B294D1" : "#E2D7EB";
 
-              <div
+            return (
+              <Link
+                href={getPostUrl(news)}
+                key={news._id || index}
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
+                  display: "grid",
+                  gridTemplateColumns: "65px 1fr", // KUNCI: Angka punya kolom sendiri
+                  gap: "12px",
+                  textDecoration: "none",
+                  padding: "18px 0",
+                  borderBottom: "1px solid #f8f6fa",
+                  alignItems: "start", // KUNCI: Paksa sejajar di atas
                 }}
               >
-                <h3
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "700",
+                {/* 1. RANK NUMBER (GIANT & ALIGNED) */}
+                <div style={{ lineHeight: "0.7", display: "flex", alignItems: "start" }}>
+                  <span style={{ 
+                    fontSize: "46px", 
+                    fontWeight: "900", 
+                    fontStyle: "italic", 
+                    color: rankColor,
+                    fontFamily: "Arial Black, sans-serif",
+                    lineHeight: "0.7"
+                  }}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                </div>
+
+                {/* 2. CONTENT AREA */}
+                <div style={{ display: "flex", flexDirection: "column", paddingTop: "5px" }}>
+                  <h3 style={{
+                    fontSize: "15px",
+                    fontWeight: "800",
                     color: "#2D2438",
-                    margin: 0,
-                    lineHeight: "1.4",
+                    margin: "0 0 6px 0",
+                    lineHeight: "1.3",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
-                  }}
-                >
-                  {news.title}
-                </h3>
+                  }}>
+                    {news.title}
+                  </h3>
 
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: "#999",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
-                  <span
-                    style={{
-                      color: "#5D427C",
-                      fontWeight: "800",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {news.category || news.categorySlug || "Pendidikan"}
-                  </span>
-
-                  <span style={{ opacity: 0.5 }}>•</span>
-
-                  <span>
-                    {news.publishedAt
-                      ? new Date(news.publishedAt).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                        })
-                      : "-"}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "10px", fontWeight: "800" }}>
+                    <span style={{ color: "#B294D1", textTransform: "uppercase" }}>
+                      {news.categoryName || "Inspirasi"}
+                    </span>
+                    <span style={{ color: "#eee" }}>•</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#B294D1", opacity: 0.7 }}>
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                       <span>{news.views || "1.2k"}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))
+              </Link>
+            );
+          })
         ) : (
-          <p
-            style={{
-              fontSize: "12px",
-              color: "#999",
-              textAlign: "center",
-              padding: "20px",
-            }}
-          >
-            Belum ada tulisan populer saat ini.
-          </p>
+          <div style={{ padding: "20px", textAlign: "center", color: "#ccc", fontSize: "13px" }}>
+            Belum ada postingan untuk ditampilkan.
+          </div>
         )}
       </div>
-
-      {/* BUTTON */}
-      <Link
-        href="/category/pendidikan"
-        style={{
-          marginTop: "20px",
-          padding: "12px",
-          textAlign: "center",
-          color: "#5D427C",
-          fontWeight: "800",
-          fontSize: "12px",
-          textDecoration: "none",
-          backgroundColor: "#fcfaff",
-          borderRadius: "30px",
-          border: "1px solid #f0eaf5",
-          letterSpacing: "0.5px",
-        }}
-      >
-        LIHAT SEMUA TULISAN →
-      </Link>
     </section>
   );
 }

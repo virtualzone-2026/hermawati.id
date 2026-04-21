@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 const inter = Inter({ 
   subsets: ["latin"],
   variable: "--font-inter",
+  display: 'swap',
 });
 
 // 2. Konfigurasi Font Arab (Amiri)
@@ -15,6 +16,7 @@ const amiri = Amiri({
   subsets: ["arabic"],
   weight: ["400", "700"],
   variable: "--font-amiri",
+  display: 'swap',
 });
 
 // Update Metadata sesuai branding HERMAWATI
@@ -29,7 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${inter.variable} ${amiri.variable}`}>
+    // Tambahkan suppressHydrationWarning di sini karena extension browser sering mengubah atribut html
+    <html lang="id" className={`${inter.variable} ${amiri.variable}`} suppressHydrationWarning>
       <head>
         {/* Konsistensi Tema Warna Ungu & Lavender */}
         <style dangerouslySetInnerHTML={{ __html: `
@@ -37,13 +40,15 @@ export default function RootLayout({
             --primary-purple: #5D427C;     /* Ungu Tua Logo */
             --secondary-lavender: #B294D1;  /* Ungu Muda Logo */
             --bright-lavender: #D8B4FE;     /* Lavender Cerah untuk Hover */
-            --bg-soft: #FDFCFD;            /* Background Bersih */
+            --bg-soft: #FDFCFD;             /* Background Bersih */
           }
 
           body {
             background-color: var(--bg-soft);
             color: #2D2438;
             margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
           }
 
           /* Global Link Styling */
@@ -72,6 +77,8 @@ export default function RootLayout({
       </head>
       <body 
         className="antialiased" 
+        // FIX: Ini kunci agar error Hydration Mismatch dari Grammarly/Extension hilang!
+        suppressHydrationWarning={true} 
         style={{ 
           display: 'flex', 
           flexDirection: 'column', 
