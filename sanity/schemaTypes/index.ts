@@ -1,8 +1,11 @@
 import { type SchemaTypeDefinition } from 'sanity'
-import post from './post' // Mengambil schema post yang sudah kita tambah kategori Khutbah & Dzikir
+import post from './post'
+import author from './author' // Import schema author yang baru dibuat
 
 export const schema: { types: SchemaTypeDefinition[] } = {
+  // Menampilkan menu Konten Utama dan Penulis di Dashboard
   types: [
-    post, // Mendaftarkan schema post agar muncul sebagai menu di dashboard
+    post, 
+    author
   ],
 }

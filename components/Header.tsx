@@ -1,88 +1,263 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
-  // Update daftar menu sesuai revisi kategori terbaru
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSticky, setIsSticky] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => setIsSticky(window.scrollY > 80);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
   const menus = [
-    { name: "Berita", slug: "berita" },
-    { name: "Artikel", slug: "artikel" },
-    { name: "Qur'an Hadits", slug: "quran-hadits" }, // Pengganti Tafsir
-    { name: "Adab & Fawaid", slug: "adab-fawaid" }, // Pengganti Hadits Pilihan
-    { name: "Fiqih Praktis", slug: "fiqih" },
-    { name: "Mutiara Hikmah", slug: "hikmah" },
-    { name: "Khutbah", slug: "khutbah" },
-    { name: "Dzikir & Doa", slug: "dzikir-doa" },
+    { name: "Pendidikan", slug: "category/pendidikan" },
+    { name: "Parenting", slug: "category/parenting" },
+    { name: "Ruang Opini", slug: "category/opini" },
+    { name: "Pustaka Dokumen", slug: "category/dokumen" },
+    { name: "Serba-serbi", slug: "category/serba-serbi" },
+  ];
+
+  const pages = [
+    { name: "Tentang Kami", slug: "about" },
+    { name: "Kontak", slug: "contact" },
+    { name: "Kebijakan Privasi", slug: "privacy" },
   ];
 
   return (
-    <header className="header-container">
-      {/* LAPIS 1: TOPBAR MODERN */}
+    <header className="header-master">
+
+      {/* TOPBAR */}
       <div className="top-bar">
-        <div className="container flex-row-center">
-          
-          {/* SISI KIRI: MENU */}
-          <div className="top-left-menu">
-            <div className="menu-circle-icon">☰</div>
-            <span className="menu-label">MENU</span>
+        <div className="container top-flex">
+
+          <div className="menu-container" ref={dropdownRef}>
+            <button
+              className="menu-toggle"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              ☰ MENU
+            </button>
+
+            {isMenuOpen && (
+              <div className="dropdown-menu">
+                <div className="dropdown-title">Kategori</div>
+                {menus.map((m) => (
+                  <Link key={m.slug} href={`/${m.slug}`} className="dropdown-item">
+                    {m.name}
+                  </Link>
+                ))}
+
+                <div className="dropdown-title">Informasi</div>
+                {pages.map((p) => (
+                  <Link key={p.slug} href={`/${p.slug}`} className="dropdown-item secondary">
+                    {p.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* SISI TENGAH: SEARCH PILL */}
-          <div className="top-center-search">
-            <div className="search-pill-container">
-              <input type="text" placeholder="Cari materi..." className="search-pill-input" />
-              <button className="search-pill-button">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="m21 21-4.3-4.3"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
+          <form onSubmit={handleSearch} className="search-pill">
+            <input
+              type="text"
+              placeholder="Cari artikel..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </form>
 
-          {/* SISI KANAN: DAFTAR MPC & MASUK */}
-          <div className="top-right-group">
-            <button className="btn-blue-pill">Daftar MPC</button>
-            <Link href="https://abahsaif.sanity.studio" target="_blank" className="btn-outline-pill">
-              Masuk
-            </Link>
-          </div>
-
+          <Link href="https://hermawati.sanity.studio" target="_blank" className="login-admin-pill">
+            👤 Admin
+          </Link>
         </div>
       </div>
 
-      {/* LAPIS 2: LOGO SECTION */}
-      <div className="logo-section">
+      {/* LOGO */}
+      <div className={`logo-section ${isSticky ? "shrink" : ""}`}>
         <div className="container">
-          <Link href="/" className="logo-flex-wrapper">
-            <Image src="/abah-saif.jpeg" alt="Logo" width={55} height={55} className="logo-rounded" />
-            <div className="logo-text-box">
-              <h1 className="main-logo-title">
-                ABAH<span className="green">SAIF</span><span className="gray">.WEB.ID</span>
+          <Link href="/" className="branding">
+            <Image src="/hermawati.png" alt="logo" width={60} height={60} priority />
+            <div>
+              <h1 className="site-title">
+                HERMA<span>WATI</span>.WEB.ID
               </h1>
-              <p className="tagline">Menggali Ilmu, Membuka Cahaya</p>
+              {!isSticky && <p className="site-tagline">Pendidikan, Parenting & Inspirasi</p>}
             </div>
           </Link>
         </div>
       </div>
 
-      {/* LAPIS 3: NAVBAR BIRU */}
-      <nav className="main-nav">
+      {/* NAVBAR */}
+      <nav className={`main-nav ${isSticky ? "sticky-active" : ""}`}>
         <div className="container">
           <ul className="nav-menu-list">
-            <li className="nav-item home-box">
+
+            <li className={pathname === "/" ? "active" : ""}>
               <Link href="/" className="nav-anchor">HOME</Link>
             </li>
+
             {menus.map((m) => (
-              <li key={m.slug} className="nav-item">
+              <li key={m.slug} className={pathname.includes(m.slug) ? "active" : ""}>
                 <Link href={`/${m.slug}`} className="nav-anchor">
                   {m.name.toUpperCase()}
                 </Link>
               </li>
             ))}
+
           </ul>
         </div>
       </nav>
+
+      {isSticky && <div style={{ height: 55 }} />}
+
+      <style jsx>{`
+        .top-flex {
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+        }
+
+        .menu-toggle {
+          font-weight:700;
+          border:none;
+          background:none;
+          color:#5D427C;
+          cursor:pointer;
+        }
+
+        .dropdown-menu {
+          position:absolute;
+          top:45px;
+          left:0;
+          width:250px;
+          background:#fff;
+          border-radius:10px;
+          box-shadow:0 10px 30px rgba(0,0,0,0.1);
+          padding:10px;
+          z-index:999;
+        }
+
+        .dropdown-item {
+          display:block;
+          padding:10px;
+          color:#5D427C;
+          text-decoration:none;
+        }
+
+        .branding {
+          display:flex;
+          align-items:center;
+          gap:12px;
+        }
+
+        .site-title {
+          font-size:26px;
+        }
+
+        .site-title span {
+          color:#B294D1;
+        }
+
+        .main-nav {
+          background:#5D427C;
+        }
+
+        .nav-menu-list {
+          display:flex;
+          list-style:none;
+          padding:0;
+          margin:0;
+          overflow-x:auto;
+          scrollbar-width:none;
+        }
+
+        .nav-menu-list::-webkit-scrollbar {
+          display:none;
+        }
+
+        .nav-anchor {
+          padding:14px 18px;
+          color:#fff;
+          text-decoration:none;
+          display:flex;
+          flex-shrink:0;
+        }
+
+        .active .nav-anchor {
+          background:#B294D1;
+          color:#5D427C;
+        }
+
+        /* ================= MOBILE FIX ================= */
+        @media (max-width: 768px) {
+
+          .site-title {
+            font-size:18px;
+            line-height:1.2;
+          }
+
+          .site-tagline {
+            font-size:11px;
+          }
+
+          .branding img {
+            width:45px !important;
+            height:45px !important;
+          }
+
+          .search-pill {
+            display:none;
+          }
+
+          /* PENTING: tetap horizontal scroll */
+          .nav-menu-list {
+            flex-wrap:nowrap !important;
+            overflow-x:auto;
+          }
+
+          .nav-anchor {
+            padding:12px 14px;
+            font-size:12px;
+          }
+        }
+
+        :global(.sticky-active) {
+          position:fixed;
+          top:0;
+          width:100%;
+          z-index:999;
+        }
+      `}</style>
     </header>
   );
 }

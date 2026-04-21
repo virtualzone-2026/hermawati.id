@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Amiri } from "next/font/google"; // Import Inter untuk teks latin, Amiri untuk Arab
+import { Inter, Amiri } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,12 +14,13 @@ const inter = Inter({
 const amiri = Amiri({
   subsets: ["arabic"],
   weight: ["400", "700"],
-  variable: "--font-amiri", // Kita simpan di CSS variable agar bisa dipanggil di mana saja
+  variable: "--font-amiri",
 });
 
+// Update Metadata sesuai branding HERMAWATI
 export const metadata: Metadata = {
-  title: "Abah Saif - Menggali Ilmu, Membuka Cahaya",
-  description: "Wadah edukasi dan literasi Islam yang menyajikan konten murni, menyejukkan, dan mencerahkan.",
+  title: "Hermawati.web.id - Pendidikan, Parenting & Inspirasi Keluarga",
+  description: "Wadah literasi digital yang fokus pada dunia pendidikan, pola asuh anak, dan berbagi dokumen bermanfaat untuk keluarga Indonesia.",
 };
 
 export default function RootLayout({
@@ -29,21 +30,64 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className={`${inter.variable} ${amiri.variable}`}>
+      <head>
+        {/* Konsistensi Tema Warna Ungu & Lavender */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root {
+            --primary-purple: #5D427C;     /* Ungu Tua Logo */
+            --secondary-lavender: #B294D1;  /* Ungu Muda Logo */
+            --bright-lavender: #D8B4FE;     /* Lavender Cerah untuk Hover */
+            --bg-soft: #FDFCFD;            /* Background Bersih */
+          }
+
+          body {
+            background-color: var(--bg-soft);
+            color: #2D2438;
+            margin: 0;
+          }
+
+          /* Global Link Styling */
+          a { 
+            transition: all 0.3s ease; 
+            color: inherit;
+            text-decoration: none;
+          }
+          
+          /* Custom Scrollbar Lavender */
+          ::-webkit-scrollbar { width: 8px; }
+          ::-webkit-scrollbar-track { background: #f1f1f1; }
+          ::-webkit-scrollbar-thumb { 
+            background: var(--secondary-lavender); 
+            border-radius: 10px; 
+          }
+          ::-webkit-scrollbar-thumb:hover { 
+            background: var(--primary-purple); 
+          }
+
+          /* Utility class untuk teks Arab */
+          .font-amiri {
+            font-family: var(--font-amiri), serif;
+          }
+        `}} />
+      </head>
       <body 
         className="antialiased" 
         style={{ 
           display: 'flex', 
           flexDirection: 'column', 
           minHeight: '100vh',
-          fontFamily: 'var(--font-inter), sans-serif' // Font default adalah latin
+          fontFamily: 'var(--font-inter), sans-serif',
         }}
       >
+        {/* Komponen Header */}
         <Header />
         
+        {/* Konten Utama */}
         <main style={{ flex: 1 }}>
           {children}
         </main>
 
+        {/* Komponen Footer */}
         <Footer />
       </body>
     </html>

@@ -7,7 +7,7 @@ export default {
       name: 'title',
       title: 'Judul Konten',
       type: 'string',
-      validation: (Rule: any) => Rule.required(),
+      validation: (Rule) => Rule.required().error('Judul harus diisi'),
     },
     {
       name: 'slug',
@@ -17,79 +17,72 @@ export default {
         source: 'title',
         maxLength: 96,
       },
-      validation: (Rule: any) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     },
     {
       name: 'category',
-      title: 'Kategori Induk',
+      title: 'Kategori Utama',
       type: 'string',
       options: {
         list: [
-          { title: 'Berita', value: 'berita' },
-          { title: 'Artikel', value: 'artikel' },
-          { title: 'Qur\'an Hadits', value: 'quran-hadits' }, // Pengganti Tafsir
-          { title: 'Adab dan Fawaid', value: 'adab-fawaid' }, // Pengganti Hadits Pilihan
-          { title: 'Fiqih Praktis', value: 'fiqih' },
-          { title: 'Mutiara Hikmah', value: 'hikmah' },
-          { title: 'Khutbah', value: 'khutbah' },
-          { title: 'Dzikir & Doa', value: 'dzikir-doa' },
+          { title: 'Pendidikan', value: 'pendidikan' },
+          { title: 'Parenting', value: 'parenting' },
+          { title: 'Ruang Opini', value: 'opini' },
+          { title: 'Pustaka Dokumen', value: 'dokumen' },
+          { title: 'Serba-serbi', value: 'serba-serbi' },
         ],
       },
-      validation: (Rule: any) => Rule.required(),
-    },
-    // SUB-KATEGORI DINAMIS
-    {
-      name: 'subCategory',
-      title: 'Sub-Kategori',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Qur\'an', value: 'quran' },
-          { title: 'Hadits', value: 'hadits' },
-          { title: 'Adab', value: 'adab' },
-          { title: 'Fawaid', value: 'fawaid' },
-        ],
-      },
-      // Logika agar Sub-Kategori hanya muncul jika Kategori Induk yang sesuai dipilih
-      hidden: ({ document }: any) => 
-        !['quran-hadits', 'adab-fawaid'].includes(document?.category)
+      validation: (Rule) => Rule.required(),
     },
     {
       name: 'author',
-      title: 'Penulis/Narasumber',
+      title: 'Penulis',
       type: 'string',
-      initialValue: 'Abah Saif',
+      initialValue: 'Admin', // Silakan ganti sesuai nama Anda
     },
     {
       name: 'mainImage',
-      title: 'Gambar Utama',
+      title: 'Gambar Utama (Thumbnail)',
       type: 'image',
       options: { hotspot: true },
+      // Gambar opsional untuk Pustaka Dokumen, tapi wajib untuk kategori lain jika ingin tampilan rapi
     },
     {
       name: 'publishedAt',
       title: 'Tanggal Terbit',
       type: 'datetime',
-      initialValue: (new Date()).toISOString(),
+      initialValue: () => new Date().toISOString(),
     },
     {
       name: 'body',
       title: 'Isi Konten',
       type: 'array',
-      of: [{ type: 'block' }], 
+      of: [
+        { type: 'block' },
+        { type: 'image' } // Menambahkan dukungan gambar di dalam teks
+      ],
     },
     {
       name: 'attachment',
-      title: 'Lampiran Materi (PDF/PPT)',
+      title: 'Unggah File (Khusus Pustaka Dokumen)',
       type: 'file',
-      options: { accept: '.pdf,.ppt,.pptx' },
+      options: { accept: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx' },
+      // Field ini otomatis muncul hanya jika kategori 'Pustaka Dokumen' dipilih
+      hidden: ({ document }) => document?.category !== 'dokumen',
       fields: [
         {
           name: 'description',
           type: 'string',
-          title: 'Keterangan File',
+          title: 'Nama/Keterangan File',
         }
       ]
     },
   ],
+  preview: {
+    select: {
+      title: 'title',
+      author: 'author',
+      media: 'mainImage',
+    },
+  },
 }

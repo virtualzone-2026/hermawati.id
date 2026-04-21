@@ -1,140 +1,99 @@
-// lib/sanity.query.ts
 import { client } from "./sanity.client";
 import { groq } from "next-sanity";
 
-// Konfigurasi revalidate agar data selalu fresh di web (Production)
 const revalidateConfig = { next: { revalidate: 0 } };
+const excerpt = `coalesce(array::join(string::split(pt::text(body), "")[0...140], ""), "") + "..."`;
 
 /**
- * 1. Ambil SEMUA postingan terbaru (Homepage & Rekomendasi)
- */
-export async function getAllPosts() {
-  return client.fetch(
-    groq`*[_type == "post"] | order(publishedAt desc)[0...15] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      category,
-      subCategory
-    }`,
-    {},
-    revalidateConfig
-  );
-}
-
-/**
- * 2. Ambil Berita Terbaru (Headline)
- */
-export async function getNewsPosts() {
-  return client.fetch(
-    groq`*[_type == "post" && category == "berita"] | order(publishedAt desc)[0...6] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      "category": "Berita"
-    }`,
-    {},
-    revalidateConfig
-  );
-}
-
-/**
- * 3. Ambil Artikel Terbaru (Sidebar Artikel) 
- * PENTING: Fungsi ini yang dicari oleh LatestArticlesSidebar.tsx
- */
-export async function getArticlePosts() {
-  return client.fetch(
-    groq`*[_type == "post" && category == "artikel"] | order(publishedAt desc)[0...5] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      "category": "Artikel"
-    }`,
-    {},
-    revalidateConfig
-  );
-}
-
-/**
- * 4. Fungsi Dinamis Rubrik (Mendukung filter Kategori Induk atau Sub-Kategori)
- */
-export async function getPostsByCategory(categoryName: string) {
-  return client.fetch(
-    groq`*[_type == "post" && (category == $categoryName || subCategory == $categoryName)] | order(publishedAt desc) {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      category,
-      subCategory,
-      "excerpt": array::join(string::split(pt::text(body), "")[0...150], "") + "..."
-    }`,
-    { categoryName },
-    revalidateConfig
-  );
-}
-
-/**
- * 5. Ambil Detail Konten (LENGKAP dengan PDF/PPT & Author)
+ * 1. DETAIL POSTINGAN
  */
 export async function getSinglePost(slug: string) {
   if (!slug) return null;
-  return client.fetch(
-    groq`*[_type == "post" && slug.current == $slug][0] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      category,
-      subCategory,
-      body,
-      author,
-      "attachmentUrl": attachment.asset->url,
-      "attachmentDescription": attachment.description
-    }`,
-    { slug },
-    revalidateConfig
-  );
+  return client.fetch(groq`*[_type == "post" && slug.current == $slug][0] {
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, publishedAt,
+    "category": category->title, 
+    "categorySlug": coalesce(category->slug.current, "berita"), 
+    body, author-> { name, "image": image.asset->url }
+  }`, { slug }, revalidateConfig);
 }
 
 /**
- * 6. Ambil Khutbah Terbaru (Sidebar Khutbah)
+ * 🔥 2. POST BERDASARKAN KATEGORI (FIX BUILD ERROR)
+ * Ini fungsi yang dicari file /app/category/[category]/page.tsx
  */
-export async function getKhutbahPosts() {
-  return client.fetch(
-    groq`*[_type == "post" && category == "khutbah"] | order(publishedAt desc)[0...5] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url,
-      publishedAt,
-      "category": "Khutbah"
-    }`,
-    {},
-    revalidateConfig
-  );
+export async function getPostsByCategory(categorySlug: string) {
+  if (!categorySlug) return [];
+  return client.fetch(groq`*[_type == "post" && coalesce(category->slug.current, "berita") == $categorySlug] | order(publishedAt desc) {
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, publishedAt,
+    "category": category->title, "categorySlug": coalesce(category->slug.current, "berita"),
+    "excerpt": ${excerpt}
+  }`, { categorySlug }, revalidateConfig);
 }
 
 /**
- * 7. Ambil Postingan Terkait (Bawah Artikel)
+ * 3. TERKAIT (FIX: 4 POST SEKALIAN)
  */
-export async function getRelatedPosts(category: string, currentSlug: string) {
-  return client.fetch(
-    groq`*[_type == "post" && category == $category && slug.current != $currentSlug][0...3] {
-      _id,
-      title,
-      "slug": slug.current,
-      "image": mainImage.asset->url
-    }`,
-    { category, currentSlug },
-    revalidateConfig
-  );
+export async function getRelatedPosts(categorySlug: string, currentSlug: string) {
+  const finalCat = categorySlug || "berita";
+  return client.fetch(groq`*[_type == "post" && coalesce(category->slug.current, "berita") == $finalCat && slug.current != $currentSlug] | order(publishedAt desc)[0...4] {
+    _id, title, "slug": slug.current, "image": mainImage.asset->url,
+    "categorySlug": coalesce(category->slug.current, "berita")
+  }`, { finalCat, currentSlug }, revalidateConfig);
+}
+
+/**
+ * 4. TERPOPULER (SIDEBAR)
+ */
+export async function getPopularPosts() {
+  return client.fetch(groq`*[_type == "post"] | order(publishedAt desc)[0...5] {
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, 
+    "categorySlug": coalesce(category->slug.current, "berita")
+  }`, {}, revalidateConfig);
+}
+
+/**
+ * 5. FUNGSI HOMEPAGE (Mencegah Export Error)
+ */
+export async function getAllPosts() {
+  return client.fetch(groq`*[_type == "post"] | order(publishedAt desc)[0...15] { 
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, publishedAt, 
+    "categorySlug": coalesce(category->slug.current, "berita") 
+  }`, {}, revalidateConfig);
+}
+
+export async function getArticlePosts() {
+  return client.fetch(groq`*[_type == "post" && category->slug.current == "artikel"] | order(publishedAt desc)[0...6] {
+    _id, title, "slug": slug.current, "image": mainImage.asset->url,
+    "categorySlug": "artikel"
+  }`, {}, revalidateConfig);
+}
+
+export async function getLatestPosts() {
+  return client.fetch(groq`*[_type == "post"] | order(publishedAt desc)[0...10] { 
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, publishedAt, 
+    "category": category->title, "categorySlug": coalesce(category->slug.current, "berita"), 
+    "excerpt": ${excerpt} 
+  }`, {}, revalidateConfig);
+}
+
+export async function getEducationPosts() {
+  return client.fetch(groq`*[_type == "post"] | order(select(category->slug.current == "pendidikan" => 0, 1) asc, publishedAt desc)[0...6] { 
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, 
+    "categorySlug": coalesce(category->slug.current, "pendidikan") 
+  }`, {}, revalidateConfig);
+}
+
+export async function getNewsPosts() { return getEducationPosts(); }
+
+export async function getDocumentPosts() {
+  return client.fetch(groq`*[_type == "post" && defined(attachment)] | order(publishedAt desc)[0...5] { 
+    _id, title, "slug": slug.current, publishedAt, "attachmentUrl": attachment.asset->url 
+  }`, {}, revalidateConfig);
+}
+
+export async function searchPosts(term: string) {
+  return client.fetch(groq`*[_type == "post" && (title match $term || category->title match $term || pt::text(body) match $term)] | order(publishedAt desc) {
+    _id, title, "slug": slug.current, "image": mainImage.asset->url, publishedAt, 
+    "categorySlug": coalesce(category->slug.current, "berita"), "excerpt": ${excerpt}
+  }`, { term: `*${term}*` }, revalidateConfig);
 }
