@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-// 1. Definisikan Tipe Data agar TypeScript tidak protes
+// 1. Definisikan Tipe Data
 type PopularSidebarProps = {
   posts: any[];
 };
@@ -12,14 +12,18 @@ function getPostUrl(post: any) {
   return `/category/${category}/${slug}`;
 }
 
-// 3. Hapus 'async' karena data sekarang dikirim dari page.tsx (Props)
 export default function PopularSidebar({ posts }: PopularSidebarProps) {
   
-  // Ambil data yang dikirim, jika kosong tampilkan pesan safety
+  // Ambil data, fallback ke array kosong jika null
   const popularData = posts || [];
 
   return (
-    <section style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+    <section style={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      width: "100%",
+      position: "relative" // Pastikan tidak ada position: sticky di sini
+    }}>
       {/* HEADER: Deep Purple & Lavender */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "25px" }}>
         <div style={{ width: "5px", height: "24px", background: "#B294D1", borderRadius: "10px" }}></div>
@@ -32,7 +36,8 @@ export default function PopularSidebar({ posts }: PopularSidebarProps) {
         {popularData.length > 0 ? (
           popularData.slice(0, 5).map((news: any, index: number) => {
             const isEven = (index + 1) % 2 === 0;
-            const rankColor = isEven ? "#B294D1" : "#E2D7EB";
+            // Warna angka raksasa (Lavender halus)
+            const rankColor = isEven ? "#EADFF2" : "#F3EDF7"; 
 
             return (
               <Link
@@ -47,44 +52,50 @@ export default function PopularSidebar({ posts }: PopularSidebarProps) {
                   borderBottom: "1px solid #f8f6fa",
                   alignItems: "start", 
                 }}
+                className="group"
               >
-                {/* 1. RANK NUMBER (GIANT & ALIGNED) */}
+                {/* 1. RANK NUMBER (Sesuai Desain Gambar: Bold Italic) */}
                 <div style={{ lineHeight: "0.7", display: "flex", alignItems: "start" }}>
                   <span style={{ 
-                    fontSize: "46px", 
+                    fontSize: "48px", 
                     fontWeight: "900", 
                     fontStyle: "italic", 
                     color: rankColor,
-                    fontFamily: "Arial Black, sans-serif",
-                    lineHeight: "0.7"
+                    fontFamily: "'Arial Black', sans-serif",
+                    lineHeight: "0.8",
+                    letterSpacing: "-2px"
                   }}>
                     {String(index + 1).padStart(2, '0')}
                   </span>
                 </div>
 
                 {/* 2. CONTENT AREA */}
-                <div style={{ display: "flex", flexDirection: "column", paddingTop: "5px" }}>
+                <div style={{ display: "flex", flexDirection: "column", paddingTop: "4px" }}>
                   <h3 style={{
                     fontSize: "15px",
                     fontWeight: "800",
                     color: "#2D2438",
-                    margin: "0 0 6px 0",
-                    lineHeight: "1.3",
+                    margin: "0 0 8px 0",
+                    lineHeight: "1.4",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
-                  }}>
+                    transition: "color 0.2s"
+                  }} className="group-hover:text-[#5D427C]">
                     {news.title}
                   </h3>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "10px", fontWeight: "800" }}>
-                    <span style={{ color: "#B294D1", textTransform: "uppercase" }}>
-                      {news.categoryName || "Inspirasi"}
+                  {/* Metadata: Kategori & Views */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "10px", fontWeight: "900" }}>
+                    <span style={{ color: "#B294D1", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      {news.categoryName || "RUANG OPINI"}
                     </span>
                     <span style={{ color: "#eee" }}>•</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#B294D1", opacity: 0.7 }}>
-                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "#B294D1", opacity: 0.6 }}>
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                       </svg>
                        <span>{news.views || "1.2k"}</span>
                     </div>
                   </div>
@@ -94,7 +105,7 @@ export default function PopularSidebar({ posts }: PopularSidebarProps) {
           })
         ) : (
           <div style={{ padding: "20px", textAlign: "center", color: "#ccc", fontSize: "13px" }}>
-            Belum ada postingan populer gaes...
+            Belum ada postingan populer...
           </div>
         )}
       </div>

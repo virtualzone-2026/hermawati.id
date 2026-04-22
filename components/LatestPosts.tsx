@@ -54,7 +54,7 @@ export default function LatestPosts({ initialPosts }: LatestPostsProps) {
             textTransform: "uppercase",
             letterSpacing: "1px",
           }}>
-          LENTERA <span style={{ color: "#B294D1" }}>TERBARU</span>
+          POSTINGAN <span style={{ color: "#B294D1" }}>TERBARU</span>
         </h2>
 
         {/* LIST POSTINGAN */}
