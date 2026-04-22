@@ -1,33 +1,37 @@
-import { getEducationPosts, getAllPosts } from "@/lib/sanity.query";
 import { urlFor } from "@/lib/sanity";
 import Link from "next/link";
 
-// 🔥 helper URL (Handle slug objek Sanity)
+// 1. Definisikan Tipe Data agar TypeScript tidak marah
+type HeadlineProps = {
+  posts: any[];
+};
+
+// 2. Helper URL (Handle slug objek Sanity)
 function getPostUrl(post: any) {
   const category = post.categorySlug || "pendidikan";
   const slug = post.slug?.current || post.slug || "";
   return `/category/${category}/${slug}`;
 }
 
-export default async function Headline() {
-  // 1. Coba ambil data Pendidikan
-  let posts = await getEducationPosts();
-
-  // 2. SAFETY GUARD: Kalau Pendidikan kosong, ambil data All Posts biar gak bolong
+export default function Headline({ posts }: HeadlineProps) {
+  // 3. FINAL GUARD: Jika data yang dikirim dari page.tsx kosong
   if (!posts || posts.length === 0) {
-    const backup = await getAllPosts();
-    posts = backup || [];
-  }
-
-  // 3. FINAL GUARD: Kalau beneran gak ada data sama sekali di Sanity
-  if (posts.length === 0) {
     return (
-      <div style={{ height: "520px", background: "#f8f6fa", borderRadius: "24px", display: "flex", alignItems: "center", justifyContent: "center", border: "2px dashed #B294D1" }}>
+      <div style={{ 
+        height: "520px", 
+        background: "#f8f6fa", 
+        borderRadius: "24px", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        border: "2px dashed #B294D1" 
+      }}>
         <p style={{ color: "#5D427C", fontWeight: "800" }}>Belum ada kiriman artikel gaes...</p>
       </div>
     );
   }
 
+  // Ambil berita utama (indeks 0) dan 2 berita terkait di bawahnya
   const mainNews = posts[0];
   const relatedNews = posts.slice(1, 3);
 
@@ -39,12 +43,12 @@ export default async function Headline() {
         overflow: "hidden",
         boxShadow: "0 20px 40px rgba(93, 66, 124, 0.15)",
         height: "520px",
-        backgroundColor: "#2D1B42", // Warna dasar gelap
+        backgroundColor: "#2D1B42", 
       }}>
       
-      {/* 1. VISUAL UTAMA */}
+      {/* VISUAL UTAMA */}
       <div style={{ width: "100%", height: "100%", position: "relative" }}>
-        {/* Cek field: mainImage atau image */}
+        {/* Prioritas: mainImage, lalu image, lalu fallback gradient */}
         {(mainNews.mainImage || mainNews.image) ? (
           <img
             src={urlFor(mainNews.mainImage || mainNews.image).width(1200).height(800).url()}
@@ -55,7 +59,7 @@ export default async function Headline() {
           <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #5D427C, #45315d)" }} />
         )}
 
-        {/* 2. OVERLAY GRADIENT PEKAT (Sesuai Referensi) */}
+        {/* OVERLAY GRADIENT PEKAT */}
         <div style={{
             position: "absolute",
             inset: 0,
@@ -74,8 +78,12 @@ export default async function Headline() {
                 fontWeight: "900",
                 margin: "0 0 15px 0",
                 lineHeight: "1.1",
-                maxWidth: "90%",
-              }}>
+                maxWidth: "95%",
+                transition: "color 0.2s"
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.color = "#B294D1")}
+              onMouseOut={(e) => (e.currentTarget.style.color = "#fff")}
+            >
               {mainNews.title}
             </h2>
           </Link>
@@ -101,7 +109,7 @@ export default async function Headline() {
             </span>
           </div>
 
-          {/* 3. RELATED NEWS (SEJAJAR DI BAWAH) */}
+          {/* RELATED NEWS (SEJAJAR DI BAWAH) */}
           {relatedNews.length > 0 && (
             <div style={{
                 display: "grid",
