@@ -1,22 +1,22 @@
-import { getNewsPosts, getAllPosts } from "@/lib/sanity.query";
 import Link from "next/link";
 
-// 🔥 helper URL Konsisten
+// 1. Definisikan Tipe Data agar TypeScript tidak protes
+type PopularSidebarProps = {
+  posts: any[];
+};
+
+// 2. Helper URL Konsisten
 function getPostUrl(post: any) {
   const category = post.categorySlug || "berita";
   const slug = post.slug?.current || post.slug || "";
   return `/category/${category}/${slug}`;
 }
 
-export default async function PopularSidebar() {
-  // 1. Coba ambil data berita populer
-  let popularData = await getNewsPosts();
-
-  // 2. SAFETY GUARD: Jika getNewsPosts kosong, ambil dari allPosts biar nggak bolong
-  if (!popularData || popularData.length === 0) {
-    const backupData = await getAllPosts();
-    popularData = backupData?.slice(0, 5) || [];
-  }
+// 3. Hapus 'async' karena data sekarang dikirim dari page.tsx (Props)
+export default function PopularSidebar({ posts }: PopularSidebarProps) {
+  
+  // Ambil data yang dikirim, jika kosong tampilkan pesan safety
+  const popularData = posts || [];
 
   return (
     <section style={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -40,12 +40,12 @@ export default async function PopularSidebar() {
                 key={news._id || index}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "65px 1fr", // KUNCI: Angka punya kolom sendiri
+                  gridTemplateColumns: "65px 1fr", 
                   gap: "12px",
                   textDecoration: "none",
                   padding: "18px 0",
                   borderBottom: "1px solid #f8f6fa",
-                  alignItems: "start", // KUNCI: Paksa sejajar di atas
+                  alignItems: "start", 
                 }}
               >
                 {/* 1. RANK NUMBER (GIANT & ALIGNED) */}
@@ -94,7 +94,7 @@ export default async function PopularSidebar() {
           })
         ) : (
           <div style={{ padding: "20px", textAlign: "center", color: "#ccc", fontSize: "13px" }}>
-            Belum ada postingan untuk ditampilkan.
+            Belum ada postingan populer gaes...
           </div>
         )}
       </div>

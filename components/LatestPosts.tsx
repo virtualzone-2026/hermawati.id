@@ -1,79 +1,79 @@
 "use client";
 
-import { getAllPosts } from "@/lib/sanity.query";
-import { urlFor } from "@/lib/sanity"; // 🔥 Tambahkan helper ini
+import { urlFor } from "@/lib/sanity";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-// 🔥 helper URL (WAJIB konsisten)
+// 1. Definisi Tipe Data agar Build Sukses
+type LatestPostsProps = {
+  initialPosts: any[];
+};
+
+// 2. Helper URL (Kunci konsistensi agar tidak 404)
 function getPostUrl(post: any) {
   const category = post.categorySlug || "berita";
   const slug = post.slug?.current || post.slug || "";
   return `/category/${category}/${slug}`;
 }
 
-export default function LatestPosts() {
-  const [posts, setPosts] = useState<any[]>([]);
+export default function LatestPosts({ initialPosts }: LatestPostsProps) {
+  // Gunakan data dari props sebagai state awal
+  const [posts] = useState<any[]>(initialPosts || []);
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
+  const postsPerPage = 8; // Dikurangi sedikit agar tidak terlalu panjang
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await getAllPosts();
-        setPosts(data || []);
-      } catch (err) {
-        console.error("Gagal load posts:", err);
-      }
-    }
-    fetchData();
-  }, []);
-
-  // Pagination
+  // Logika Pagination
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(posts.length / postsPerPage);
 
-  const getCategoryColor = (category: string) => {
-    switch (category?.toLowerCase()) {
+  // Warna kategori sesuai Brand Hermawati
+  const getCategoryColor = (slug: string) => {
+    switch (slug?.toLowerCase()) {
       case "pendidikan": return "#5D427C";
       case "parenting": return "#B294D1";
-      case "opini": return "#8E79A5";
-      case "dokumen": return "#4A3B5E";
+      case "ruang-opini": return "#D4AF37";
+      case "pustaka-dokumen": return "#198754";
       default: return "#5D427C";
     }
   };
 
   return (
-    <section style={{ marginTop: "20px", paddingBottom: "50px" }}>
+    <section style={{ paddingBottom: "50px" }}>
       <div>
+        {/* HEADER SEKSI */}
         <h2 style={{
             fontSize: "22px",
             color: "#5D427C",
             fontWeight: "900",
-            marginBottom: "35px",
+            marginBottom: "40px",
             borderBottom: "4px solid #B294D1",
             display: "inline-block",
             paddingBottom: "8px",
             textTransform: "uppercase",
             letterSpacing: "1px",
           }}>
-          Postingan <span style={{ color: "#B294D1" }}>Terbaru</span>
+          LENTERA <span style={{ color: "#B294D1" }}>TERBARU</span>
         </h2>
 
+        {/* LIST POSTINGAN */}
         <div style={{ display: "flex", flexDirection: "column", gap: "35px", minHeight: "400px" }}>
           {currentPosts.map((post: any) => (
-            <Link href={getPostUrl(post)} key={post._id} style={{ display: "flex", gap: "25px", textDecoration: "none", alignItems: "flex-start" }} className="group">
-              
-              {/* Thumbnail - SEKARANG MUNCUL GAMBARNYA */}
+            <Link 
+              href={getPostUrl(post)} 
+              key={post._id} 
+              style={{ display: "flex", gap: "25px", textDecoration: "none", alignItems: "start" }} 
+              className="news-item-group"
+            >
+              {/* Thumbnail */}
               <div style={{
-                  width: "220px",
-                  height: "140px",
-                  borderRadius: "16px",
+                  width: "240px",
+                  height: "150px",
+                  borderRadius: "20px",
                   overflow: "hidden",
                   flexShrink: 0,
-                  backgroundColor: "#f8f6fa",
+                  backgroundColor: "#F9F6FB",
                   boxShadow: "0 4px 15px rgba(93, 66, 124, 0.08)",
                 }}>
                 <img
@@ -87,43 +87,48 @@ export default function LatestPosts() {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    transition: "transform 0.4s",
+                    transition: "transform 0.5s ease",
                   }}
-                  className="group-hover:scale-110"
+                  className="news-img"
                 />
               </div>
 
-              {/* Konten */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {/* Konten Teks */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "5px" }}>
                 <span style={{
                     fontSize: "11px",
                     color: getCategoryColor(post.categorySlug),
                     fontWeight: "800",
                     textTransform: "uppercase",
                     letterSpacing: "1px",
+                    background: `${getCategoryColor(post.categorySlug)}15`,
+                    padding: "4px 10px",
+                    borderRadius: "8px",
+                    display: "inline-block",
+                    width: "fit-content"
                   }}>
-                  {post.categoryName || post.categorySlug || "Inspirasi"}
+                  {post.categoryName || "Inspirasi"}
                 </span>
 
                 <h3 style={{
                     fontSize: "20px",
-                    fontWeight: "800",
+                    fontWeight: "900",
                     color: "#2D2438",
                     margin: 0,
                     lineHeight: "1.4",
                     transition: "color 0.3s",
                   }}
-                  className="group-hover:text-purple-700"
+                  className="news-title"
                 >
                   {post.title}
                 </h3>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "#888" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "#94A3B8", fontWeight: 600 }}>
                   <span>
                     {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-"}
                   </span>
-                  <span>•</span>
-                  <span style={{ color: "#B294D1", fontWeight: "bold" }}>
+                  <span style={{ color: "#EADFF2" }}>•</span>
+                  <span style={{ color: "#B294D1", fontWeight: "800" }}>
                     {post.authorName || post.author?.name || "Admin"}
                   </span>
                 </div>
@@ -132,25 +137,57 @@ export default function LatestPosts() {
           ))}
 
           {posts.length === 0 && (
-            <p style={{ color: "#B294D1", fontStyle: "italic", textAlign: "center" }}>Menyiapkan bacaan untuk Anda...</p>
+            <div style={{ textAlign: "center", padding: "50px", color: "#B294D1" }}>
+               <p style={{ fontStyle: "italic" }}>Belum ada kiriman terbaru gaes...</p>
+            </div>
           )}
         </div>
 
-        {/* PAGINATION */}
+        {/* PAGINATION PREMIUM */}
         {totalPages > 1 && (
-          <div style={{ display: "flex", gap: "12px", marginTop: "50px", alignItems: "center", justifyContent: "center" }}>
-            <button onClick={() => { setCurrentPage((prev) => Math.max(prev - 1, 1)); window.scrollTo(0, 0); }} disabled={currentPage === 1} style={{ padding: "10px 18px", borderRadius: "30px", border: "1px solid #f0eaf5", backgroundColor: currentPage === 1 ? "#f5f5f5" : "#fff", cursor: currentPage === 1 ? "not-allowed" : "pointer", fontWeight: "800", color: "#5D427C", fontSize: "12px" }}>PREV</button>
+          <div style={{ display: "flex", gap: "10px", marginTop: "60px", alignItems: "center", justifyContent: "center" }}>
+            <button 
+              onClick={() => { setCurrentPage((p) => Math.max(p - 1, 1)); window.scrollTo({ top: 500, behavior: 'smooth' }); }} 
+              disabled={currentPage === 1}
+              style={{ padding: "12px 20px", borderRadius: "15px", border: "1px solid #F0EAF5", backgroundColor: "#fff", cursor: currentPage === 1 ? "not-allowed" : "pointer", fontWeight: "800", color: "#5D427C", fontSize: "12px", opacity: currentPage === 1 ? 0.5 : 1 }}
+            >
+              PREV
+            </button>
+            
             {[...Array(totalPages)].map((_, i) => (
-              <button key={i + 1} onClick={() => { setCurrentPage(i + 1); window.scrollTo(0, 0); }} style={{ width: "40px", height: "40px", borderRadius: "50%", border: "1px solid #f0eaf5", backgroundColor: currentPage === i + 1 ? "#5D427C" : "#fff", color: currentPage === i + 1 ? "#fff" : "#5D427C", cursor: "pointer", fontWeight: "800" }}>{i + 1}</button>
+              <button 
+                key={i + 1} 
+                onClick={() => { setCurrentPage(i + 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }} 
+                style={{ 
+                  width: "45px", height: "45px", borderRadius: "15px", border: "none",
+                  backgroundColor: currentPage === i + 1 ? "#5D427C" : "#F9F6FB", 
+                  color: currentPage === i + 1 ? "#fff" : "#5D427C", 
+                  cursor: "pointer", fontWeight: "900", transition: "0.3s"
+                }}
+              >
+                {i + 1}
+              </button>
             ))}
-            <button onClick={() => { setCurrentPage((prev) => Math.min(prev + 1, totalPages)); window.scrollTo(0, 0); }} disabled={currentPage === totalPages} style={{ padding: "10px 18px", borderRadius: "30px", border: "1px solid #f0eaf5", backgroundColor: currentPage === totalPages ? "#f5f5f5" : "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer", fontWeight: "800", color: "#5D427C", fontSize: "12px" }}>NEXT</button>
+
+            <button 
+              onClick={() => { setCurrentPage((p) => Math.min(p + 1, totalPages)); window.scrollTo({ top: 500, behavior: 'smooth' }); }} 
+              disabled={currentPage === totalPages}
+              style={{ padding: "12px 20px", borderRadius: "15px", border: "1px solid #F0EAF5", backgroundColor: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer", fontWeight: "800", color: "#5D427C", fontSize: "12px", opacity: currentPage === totalPages ? 0.5 : 1 }}
+            >
+              NEXT
+            </button>
           </div>
         )}
       </div>
 
       <style jsx>{`
-        .group:hover h3 { color: #5d427c !important; }
-        .group:hover img { transform: scale(1.05); }
+        .news-item-group:hover .news-title { color: #5D427C !important; }
+        .news-item-group:hover .news-img { transform: scale(1.08); }
+        
+        @media (max-width: 600px) {
+          .news-item-group { flex-direction: column; gap: 15px !important; }
+          .news-item-group div:first-child { width: 100% !important; height: 200px !important; }
+        }
       `}</style>
     </section>
   );

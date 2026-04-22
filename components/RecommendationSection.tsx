@@ -4,16 +4,17 @@ import Link from "next/link";
 import { urlFor } from "@/lib/sanity";
 import { useState, useEffect } from "react";
 
-// helper URL biar konsisten dengan halaman lain
+// 🔥 helper URL: Kunci agar link tidak error dan SEO ramah
 function getPostUrl(post: any) {
-  const category = post.categorySlug || "berita";
-  return `/category/${category}/${post.slug}`;
+  const catSlug = post.categorySlug?.current || post.categorySlug || "berita";
+  const postSlug = post.slug?.current || post.slug || "";
+  return `/category/${catSlug}/${postSlug}`;
 }
 
 export default function RecommendationSection({ posts }: { posts: any[] }) {
   const [shuffledData, setShuffledData] = useState<any[]>([]);
 
-  // Efek shuffle: Biar setiap refresh rekomendasinya ganti-ganti gaes!
+  // Efek shuffle: Memberikan kesan web selalu "fresh" setiap dikunjungi
   useEffect(() => {
     if (posts && posts.length > 0) {
       const shuffled = [...posts]
@@ -23,13 +24,15 @@ export default function RecommendationSection({ posts }: { posts: any[] }) {
     }
   }, [posts]);
 
-  const getCategoryColor = (category: string) => {
-    switch (category?.toLowerCase()) {
+  // Warna kategori sinkron dengan Branding Hermawati
+  const getCategoryColor = (slug: any) => {
+    const s = typeof slug === 'object' ? slug.current : slug;
+    switch (s?.toLowerCase()) {
       case "pendidikan": return "#5D427C";
       case "parenting": return "#B294D1";
-      case "opini": return "#8E79A5";
-      case "dokumen": return "#4A3B5E";
-      default: return "#7a6a8a";
+      case "ruang-opini": return "#D4AF37";
+      case "pustaka-dokumen": return "#198754";
+      default: return "#5D427C";
     }
   };
 
@@ -43,7 +46,7 @@ export default function RecommendationSection({ posts }: { posts: any[] }) {
         </h2>
 
         <Link href="/category/pendidikan" className="see-all-link">
-          LIHAT SEMUA ❯
+          JELAJAH SEMUA ➔
         </Link>
       </div>
 
@@ -54,105 +57,127 @@ export default function RecommendationSection({ posts }: { posts: any[] }) {
             key={item._id}
             className="recommendation-card"
           >
+            {/* Kontainer Gambar dengan Aspect Ratio Premium */}
             <div className="image-container">
               {item.mainImage ? (
                 <img
-                  src={urlFor(item.mainImage).width(400).height(250).url()}
+                  src={urlFor(item.mainImage).width(500).height(320).url()}
                   alt={item.title}
                   className="card-image"
                 />
               ) : (
-                <div className="placeholder-img">No Image</div>
+                <div className="placeholder-img">
+                  <span>Hermawati</span>
+                </div>
               )}
             </div>
 
+            {/* Label Kategori dengan Background Soft */}
             <span
-              style={{ color: getCategoryColor(item.categorySlug) }}
+              style={{ 
+                color: getCategoryColor(item.categorySlug),
+                background: `${getCategoryColor(item.categorySlug)}10` 
+              }}
               className="category-label"
             >
               {item.categoryName || "Inspirasi"}
             </span>
 
             <h3 className="card-title">{item.title}</h3>
+            
+            <div className="card-footer">
+               <span>Selengkapnya</span>
+               <span className="arrow">→</span>
+            </div>
           </Link>
         ))}
       </div>
 
       <style jsx>{`
         .recommendation-wrapper {
-          margin-top: 50px;
-          padding: 20px 0;
+          margin-top: 30px;
+          padding: 10px 0;
           width: 100%;
         }
         .recommendation-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 30px;
-          border-bottom: 2px solid #f0eaf5;
+          margin-bottom: 35px;
+          border-bottom: 1px solid #f0eaf5;
           padding-bottom: 15px;
         }
         .recommendation-title {
           font-size: 24px;
-          color: #5d427c;
+          color: #2d2438;
           font-weight: 900;
           margin: 0;
           letter-spacing: -0.5px;
         }
         .lavender-text { color: #b294d1; }
         .see-all-link {
-          font-size: 12px;
-          color: #b294d1;
+          font-size: 11px;
+          color: #5d427c;
           text-decoration: none;
-          font-weight: 800;
+          font-weight: 900;
           letter-spacing: 1px;
           transition: 0.3s;
+          padding: 8px 15px;
+          background: #f9f6fb;
+          border-radius: 10px;
         }
-        .see-all-link:hover { color: #5d427c; }
+        .see-all-link:hover { 
+          background: #5d427c;
+          color: #fff;
+        }
 
         .recommendation-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 30px;
+          gap: 35px;
         }
 
         .recommendation-card {
           text-decoration: none;
           color: inherit;
           display: block;
+          transition: 0.3s;
         }
         .image-container {
           width: 100%;
-          height: 190px;
+          aspect-ratio: 16/10;
           border-radius: 20px;
           overflow: hidden;
-          margin-bottom: 15px;
+          margin-bottom: 18px;
           background-color: #f8f6fa;
-          box-shadow: 0 8px 20px rgba(93, 66, 124, 0.08);
+          box-shadow: 0 10px 25px rgba(93, 66, 124, 0.06);
         }
         .card-image {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+          transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
         }
         .recommendation-card:hover .card-image {
-          transform: scale(1.08);
+          transform: scale(1.1);
         }
         .placeholder-img {
           width: 100%; height: 100%; display: flex; align-items: center; 
-          justify-content: center; color: #ccc; font-size: 12px;
+          justify-content: center; color: #b294d1; font-weight: 800; font-size: 12px;
+          background: linear-gradient(135deg, #f9f6fb, #eadff2);
         }
         .category-label {
           font-size: 10px;
-          font-weight: 900;
-          display: block;
-          margin-bottom: 8px;
+          font-weight: 800;
+          display: inline-block;
+          margin-bottom: 12px;
           text-transform: uppercase;
-          letter-spacing: 1.5px;
+          letter-spacing: 1px;
+          padding: 4px 10px;
+          border-radius: 8px;
         }
         .card-title {
-          font-size: 17px;
+          font-size: 18px;
           font-weight: 800;
           line-height: 1.5;
           margin: 0;
@@ -163,6 +188,22 @@ export default function RecommendationSection({ posts }: { posts: any[] }) {
           overflow: hidden;
           transition: color 0.3s;
         }
+        .card-footer {
+          margin-top: 15px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          color: #b294d1;
+          opacity: 0;
+          transform: translateX(-10px);
+          transition: 0.3s;
+        }
+        .recommendation-card:hover .card-footer {
+          opacity: 1;
+          transform: translateX(0);
+        }
         .recommendation-card:hover .card-title {
           color: #5d427c;
         }
@@ -172,8 +213,7 @@ export default function RecommendationSection({ posts }: { posts: any[] }) {
         }
 
         @media (max-width: 600px) {
-          .recommendation-grid { grid-template-columns: 1fr; gap: 25px; }
-          .image-container { height: 210px; }
+          .recommendation-grid { grid-template-columns: 1fr; gap: 30px; }
           .recommendation-title { font-size: 20px; }
         }
       `}</style>

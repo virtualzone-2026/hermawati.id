@@ -3,19 +3,20 @@
 import { urlFor } from "@/lib/sanity";
 import Link from "next/link";
 
-// 🔥 helper URL Konsisten (Handle Sanity Slug Object)
+// 1. Helper URL Konsisten (Penting agar tidak 404)
 function getPostUrl(item: any) {
   const category = item.categorySlug || "berita";
   const slug = item.slug?.current || item.slug || "";
   return `/category/${category}/${slug}`;
 }
 
+// 2. Definisi Props agar TypeScript tidak marah (Solusi IntrinsicAttributes)
 interface TopNewsProps {
   posts: any[];
 }
 
 export default function TopNews({ posts }: TopNewsProps) {
-  // Ambil 5 berita dari data yang sudah ditarik di page.tsx
+  // Ambil 5 berita teratas
   const topBarNews = posts?.slice(0, 5) || [];
 
   if (topBarNews.length === 0) {
@@ -27,58 +28,69 @@ export default function TopNews({ posts }: TopNewsProps) {
   }
 
   /**
-   * 🔥 FIX HYDRATION ERROR: 
-   * Kita buat angka view "random" tapi stabil berdasarkan panjang judul.
-   * Jadi server dan client bakal nampilin angka yang sama persis.
+   * 🔥 FIX HYDRATION & VIEW LOGIC: 
+   * Membuat angka view terlihat realistik & stabil (Server-Client Sinkron)
    */
-  const getFakeViews = (title: string) => {
-    if (!title) return 150;
-    return (title.length * 7) + 120; 
+  const getDisplayViews = (item: any) => {
+    if (item.views) return item.views;
+    // Jika tidak ada data view, buat angka stabil berdasarkan panjang judul
+    const seed = item.title?.length || 10;
+    const count = (seed % 5) + 1;
+    const decimal = seed % 9;
+    return `${count}.${decimal}k`;
   };
 
   return (
-    <div className="top-news-grid">
-      {topBarNews.map((item: any) => (
-        <Link
-          href={getPostUrl(item)}
-          key={item._id}
-          className="news-card-wrapper"
-        >
-          <div className="news-card">
-            {/* THUMBNAIL */}
-            <div className="image-box">
-              {item.mainImage ? (
-                <img
-                  src={urlFor(item.mainImage).width(400).height(225).url()}
-                  alt={item.title}
-                  className="card-img"
-                />
-              ) : (
-                <div className="placeholder-img">Hermawati</div>
-              )}
-              {/* Badge Kategori Kecil */}
-              <div className="cat-badge">
-                {item.categoryName || item.category || "Inspirasi"}
+    <div className="top-news-container">
+      <div className="top-news-grid">
+        {topBarNews.map((item: any) => (
+          <Link
+            href={getPostUrl(item)}
+            key={item._id}
+            className="news-card-wrapper"
+          >
+            <div className="news-card">
+              {/* THUMBNAIL AREA */}
+              <div className="image-box">
+                {item.mainImage ? (
+                  <img
+                    src={urlFor(item.mainImage).width(400).height(225).url()}
+                    alt={item.title}
+                    className="card-img"
+                  />
+                ) : (
+                  <div className="placeholder-img">
+                    <span>Hermawati</span>
+                  </div>
+                )}
+                {/* Badge Kategori */}
+                <div className="cat-badge">
+                  {item.categoryName || "Inspirasi"}
+                </div>
               </div>
-            </div>
 
-            {/* TEXT INFO */}
-            <div className="text-box">
-              <h4 className="news-title">{item.title}</h4>
-              <div className="news-meta">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                {/* Pakai fungsi views yang stabil gaes! */}
-                <span>{item.views || getFakeViews(item.title)}</span>
+              {/* TEXT AREA */}
+              <div className="text-box">
+                <h4 className="news-title">{item.title}</h4>
+                <div className="news-meta">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <span>{getDisplayViews(item)}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        ))}
+      </div>
 
       <style jsx>{`
+        .top-news-container {
+          width: 100%;
+          overflow: hidden;
+        }
+
         .top-news-grid {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
@@ -89,16 +101,13 @@ export default function TopNews({ posts }: TopNewsProps) {
         .news-card-wrapper {
           text-decoration: none;
           color: inherit;
+          display: block;
         }
 
         .news-card {
           display: flex;
           flex-direction: column;
-          transition: transform 0.3s ease;
-        }
-
-        .news-card:hover {
-          transform: translateY(-5px);
+          cursor: pointer;
         }
 
         .image-box {
@@ -107,18 +116,18 @@ export default function TopNews({ posts }: TopNewsProps) {
           aspect-ratio: 16/9;
           border-radius: 12px;
           overflow: hidden;
-          background-color: #f8f6fa;
-          box-shadow: 0 4px 15px rgba(93, 66, 124, 0.06);
+          background-color: #F9F6FB;
+          box-shadow: 0 4px 12px rgba(93, 66, 124, 0.05);
         }
 
         .card-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: 0.5s ease;
+          transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        .news-card:hover .card-img {
+        .news-card-wrapper:hover .card-img {
           transform: scale(1.1);
         }
 
@@ -127,28 +136,31 @@ export default function TopNews({ posts }: TopNewsProps) {
           display: flex;
           align-items: center;
           justify-content: center;
+          background: linear-gradient(135deg, #F0EAF5, #EADFF2);
           color: #B294D1;
           font-weight: 800;
-          font-size: 11px;
+          font-size: 10px;
+          text-transform: uppercase;
         }
 
         .cat-badge {
           position: absolute;
           top: 8px;
           left: 8px;
-          background: rgba(93, 66, 124, 0.9);
+          background: rgba(93, 66, 124, 0.85);
           color: #fff;
           font-size: 8px;
           font-weight: 900;
-          padding: 3px 7px;
-          border-radius: 4px;
+          padding: 3px 8px;
+          border-radius: 6px;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(8px);
+          z-index: 2;
         }
 
         .text-box {
-          padding: 12px 0;
+          padding: 12px 2px;
         }
 
         .news-title {
@@ -161,51 +173,56 @@ export default function TopNews({ posts }: TopNewsProps) {
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
-          transition: color 0.3s;
+          transition: color 0.3s ease;
         }
 
-        .news-card:hover .news-title {
+        .news-card-wrapper:hover .news-title {
           color: #5D427C;
         }
 
         .news-meta {
           display: flex;
           align-items: center;
-          gap: 5px;
-          font-size: 11px;
+          gap: 6px;
+          font-size: 10px;
           color: #B294D1;
-          font-weight: 700;
+          font-weight: 800;
         }
 
         .empty-state {
           text-align: center;
-          padding: 40px;
+          padding: 30px;
           color: #B294D1;
           font-style: italic;
-          border: 1px dashed #f0eaf5;
-          border-radius: 16px;
+          font-size: 13px;
+          border: 1px dashed #EADFF2;
+          border-radius: 12px;
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 1200px) {
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-width: 1100px) {
           .top-news-grid { grid-template-columns: repeat(4, 1fr); }
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 900px) {
           .top-news-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 650px) {
           .top-news-grid { 
             display: flex;
             overflow-x: auto;
-            padding-bottom: 15px;
             gap: 15px;
-            scrollbar-width: none;
+            padding-bottom: 10px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
           }
+          .top-news-grid::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
+          
           .news-card-wrapper {
-            min-width: 200px;
+            min-width: 180px;
             flex-shrink: 0;
+            scroll-snap-align: start;
           }
         }
       `}</style>
