@@ -115,3 +115,19 @@ export async function getDocumentPosts() {
 
 // Fungsi bantu tambahan agar tidak error saat dipanggil
 export async function getNewsPosts() { return getEducationPosts(); }
+
+export async function searchPosts(query: string) {
+  // Query GROQ untuk mencari judul atau isi artikel yang cocok
+  const searchQuery = `*[_type == "post" && (title match $query || body[].children[].text match $query)] | order(publishedAt desc) {
+    _id,
+    title,
+    slug,
+    mainImage,
+    publishedAt,
+    "categoryName": categories[0]->title,
+    "categorySlug": categories[0]->slug.current,
+    author->{name, image}
+  }`;
+
+  return client.fetch(searchQuery, { query: `*${query}*` });
+}

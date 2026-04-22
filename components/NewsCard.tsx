@@ -1,25 +1,44 @@
-// components/NewsCard.tsx
+'use client'
+
 import Link from "next/link";
+import { urlFor } from "@/lib/sanity";
 
 type NewsCardProps = {
   post: {
+    _id?: string;
     title?: string;
-    image?: string;
+    mainImage?: any;
+    image?: string; 
     publishedAt?: string;
-    slug?: string;
-    category?: string;
+    slug?: any; 
+    categoryName?: string;
+    categorySlug?: any;
   };
 };
 
 export default function NewsCard({ post }: NewsCardProps) {
-  // Ambil data dari objek post, berikan fallback jika data kosong
+  // 1. Ekstrak Slug dengan Optional Chaining (Anti-Null)
+  // Kita cek: jika post.slug adalah object DAN punya .current, ambil itu. Jika tidak, ambil post.slug langsung.
+  const slug = (post?.slug && typeof post.slug === 'object') 
+    ? post.slug.current 
+    : (post?.slug || "#");
+  
+  // 2. Ekstrak Category Slug dengan pengaman ekstra
+  // Pakai Optional Chaining ?. biar kalau null gak meledak gaes
+  const catSlug = (post?.categorySlug && typeof post.categorySlug === 'object')
+    ? post.categorySlug.current 
+    : (post?.categorySlug || "artikel");
+
+  // 3. Mapping Data & Fallback
   const title = post?.title || "Judul Konten";
-  const image = post?.image || "https://via.placeholder.com/400/240?text=Pendidikan";
-  const category = post?.category || "Pendidikan";
-  const slug = post?.slug || "#";
+  const category = post?.categoryName || "Pendidikan";
   const date = post?.publishedAt;
 
-  // Format tanggal ke standar Indonesia
+  // 4. Handle Gambar Sanity secara aman
+  const imageUrl = post?.mainImage?.asset
+    ? urlFor(post.mainImage).width(600).height(400).url() 
+    : "https://via.placeholder.com/600/400?text=Hermawati";
+
   const formattedDate = date 
     ? new Date(date).toLocaleDateString("id-ID", {
         day: "numeric",
@@ -28,76 +47,83 @@ export default function NewsCard({ post }: NewsCardProps) {
       })
     : "Baru saja";
 
-  // Fungsi untuk menentukan warna label berdasarkan kategori
   const getCategoryColor = (cat: string) => {
     switch (cat?.toLowerCase()) {
-      case 'pendidikan': return '#1a365d';
-      case 'parenting': return '#d63384';
-      case 'opini': return '#fd7e14';
-      case 'dokumen': return '#198754';
-      default: return '#1a365d';
+      case 'pendidikan': return '#5D427C';
+      case 'parenting': return '#B294D1';
+      case 'ruang opini': return '#D4AF37';
+      case 'pustaka dokumen': return '#198754';
+      default: return '#5D427C';
     }
   };
 
   return (
-    <article className="news-card" style={{ 
-      borderBottom: '1px solid #f5f5f5', 
+    <article style={{ 
+      borderBottom: '1px solid #F0EAF5', 
       paddingBottom: '20px', 
-      marginBottom: '25px' 
+      marginBottom: '25px'
     }}>
-      <Link href={`/post/${slug}`} style={{ textDecoration: 'none', display: 'block' }} className="group">
+      <Link href={`/category/${catSlug}/${slug}`} style={{ textDecoration: 'none', display: 'block' }} className="group">
+        
         {/* Kontainer Gambar */}
         <div style={{ 
           width: '100%', 
-          aspectRatio: '16/9', 
-          borderRadius: '12px', 
+          aspectRatio: '16/10', 
+          borderRadius: '20px', 
           overflow: 'hidden', 
-          marginBottom: '15px',
-          backgroundColor: '#f8f9fa',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          marginBottom: '18px',
+          backgroundColor: '#F9F6FB',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.06)'
         }}>
           <img 
-            src={image} 
+            src={imageUrl} 
             alt={title} 
-            loading="lazy" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-            className="group-hover:scale-105"
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover',
+              transition: 'transform 0.5s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
+            onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           />
         </div>
 
         {/* Konten Teks */}
-        <div className="news-card-content">
+        <div>
           <span style={{ 
             fontSize: '11px', 
             color: getCategoryColor(category), 
             fontWeight: 800, 
             textTransform: 'uppercase',
             display: 'inline-block',
-            marginBottom: '8px',
+            marginBottom: '10px',
             letterSpacing: '1px',
+            padding: '4px 10px',
+            background: `${getCategoryColor(category)}15`,
+            borderRadius: '8px'
           }}>
             {category}
           </span>
           
           <h3 style={{ 
-            fontSize: '18px', 
-            fontWeight: 800, 
-            color: '#1a365d', 
+            fontSize: '19px', 
+            fontWeight: 900, 
+            color: '#2D2438', 
             lineHeight: '1.4',
             margin: '0 0 12px 0',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            transition: 'color 0.2s'
-          }} className="group-hover:text-blue-700">
+            overflow: 'hidden'
+          }}>
             {title}
           </h3>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: '#999' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#94A3B8' }}>
             <span>{formattedDate}</span>
-            <span>•</span>
-            <span style={{ color: '#d4af37', fontWeight: 'bold' }}>Baca Selengkapnya</span>
+            <span style={{ color: '#EADFF2' }}>|</span>
+            <span style={{ color: '#B294D1', fontWeight: 800 }}>Baca Artikel ➔</span>
           </div>
         </div>
       </Link>
