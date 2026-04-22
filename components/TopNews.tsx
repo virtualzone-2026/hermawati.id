@@ -3,10 +3,11 @@
 import { urlFor } from "@/lib/sanity";
 import Link from "next/link";
 
-// 🔥 helper URL Konsisten
+// 🔥 helper URL Konsisten (Handle Sanity Slug Object)
 function getPostUrl(item: any) {
   const category = item.categorySlug || "berita";
-  return `/category/${category}/${item.slug}`;
+  const slug = item.slug?.current || item.slug || "";
+  return `/category/${category}/${slug}`;
 }
 
 interface TopNewsProps {
@@ -24,6 +25,16 @@ export default function TopNews({ posts }: TopNewsProps) {
       </div>
     );
   }
+
+  /**
+   * 🔥 FIX HYDRATION ERROR: 
+   * Kita buat angka view "random" tapi stabil berdasarkan panjang judul.
+   * Jadi server dan client bakal nampilin angka yang sama persis.
+   */
+  const getFakeViews = (title: string) => {
+    if (!title) return 150;
+    return (title.length * 7) + 120; 
+  };
 
   return (
     <div className="top-news-grid">
@@ -47,7 +58,7 @@ export default function TopNews({ posts }: TopNewsProps) {
               )}
               {/* Badge Kategori Kecil */}
               <div className="cat-badge">
-                {item.categoryName || "Inspirasi"}
+                {item.categoryName || item.category || "Inspirasi"}
               </div>
             </div>
 
@@ -55,8 +66,12 @@ export default function TopNews({ posts }: TopNewsProps) {
             <div className="text-box">
               <h4 className="news-title">{item.title}</h4>
               <div className="news-meta">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <span>{item.views || Math.floor(Math.random() * 500) + 100}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                {/* Pakai fungsi views yang stabil gaes! */}
+                <span>{item.views || getFakeViews(item.title)}</span>
               </div>
             </div>
           </div>
@@ -172,6 +187,10 @@ export default function TopNews({ posts }: TopNewsProps) {
         }
 
         /* RESPONSIVE */
+        @media (max-width: 1200px) {
+          .top-news-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
         @media (max-width: 1024px) {
           .top-news-grid { grid-template-columns: repeat(3, 1fr); }
         }
