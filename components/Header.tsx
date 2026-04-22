@@ -96,7 +96,7 @@ export default function Header() {
             />
           </form>
 
-          <Link href="https://hermawati.sanity.studio" target="_blank" className="login-admin-pill">
+          <Link href="https://hermawati.web.id/studio" target="_blank" className="login-admin-pill">
             👤 Admin
           </Link>
         </div>
